@@ -18,8 +18,11 @@ router.get("/:id", getLeadById);
 router.put("/:id/trainer", updateTrainer);
 router.put("/:id/quote", updateQuote);
 router.put("/:id/status", updateStatus);
+import { addRemark } from "../controllers/leadController.js";
 
-//✅ TEST EMAIL ROUTE
+router.put("/:id/remarks", addRemark);
+
+// TEST EMAIL ROUTE
 
 router.get("/test-email", async (req, res) => {
   try {

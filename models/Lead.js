@@ -20,6 +20,14 @@ const leadSchema = new mongoose.Schema(
       enum: ["open", "in-progress", "completed", "closed"],
       default: "open",
     },
+    remarks: [
+  {
+    text: { type: String, required: true },
+    author: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now }
+  }
+],
+
 
     notificationsEnabled: { type: Boolean, default: true },
     lastNotificationAt: { type: Date, default: null },

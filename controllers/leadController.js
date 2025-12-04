@@ -31,7 +31,7 @@ export const getLeadById = async (req, res) => {
   }
 };
 
-// Update trainer assignment
+// Update trainer assignment (NO STATUS CHANGE)
 export const updateTrainer = async (req, res) => {
   try {
     const lead = await Lead.findByIdAndUpdate(
@@ -39,7 +39,6 @@ export const updateTrainer = async (req, res) => {
       {
         trainerFound: req.body.trainerFound,
         trainerName: req.body.trainerName,
-        status: "in-progress",
       },
       { new: true }
     );
@@ -49,7 +48,7 @@ export const updateTrainer = async (req, res) => {
   }
 };
 
-// Update quote info
+// Update quote info (NO STATUS CHANGE)
 export const updateQuote = async (req, res) => {
   try {
     const lead = await Lead.findByIdAndUpdate(
@@ -58,8 +57,7 @@ export const updateQuote = async (req, res) => {
         quoteAmount: req.body.quoteAmount,
         quoteNotes: req.body.quoteNotes,
         quoteSent: true,
-        status: "completed",
-        notificationsEnabled: false,
+        notificationsEnabled: false, // you may want to remove this too
       },
       { new: true }
     );
@@ -68,8 +66,33 @@ export const updateQuote = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+// Add a new remark
+export const addRemark = async (req, res) => {
+  try {
+    const { text, author } = req.body;
 
-// Update status
+    const updatedLead = await Lead.findByIdAndUpdate(
+      req.params.id,
+      {
+        $push: {
+          remarks: {
+            text,
+            author,
+            timestamp: new Date()
+          }
+        }
+      },
+      { new: true }
+    );
+
+    res.json(updatedLead);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+// Update status (only user controls this)
 export const updateStatus = async (req, res) => {
   try {
     const lead = await Lead.findByIdAndUpdate(
