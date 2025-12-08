@@ -16,7 +16,7 @@ app.get("/", (req, res) => {
   res.send("CRM Backend is running");
 });
 
-// 🔥 Dummy KeepAlive Route for UptimeRobot
+// dummy KeepAlive Route for UptimeRobot
 app.get("/keepalive", (req, res) => {
   res.status(200).json({ alive: true, service: "crm-backend" });
 });
