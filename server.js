@@ -10,20 +10,28 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Root route
 app.get("/", (req, res) => {
-  res.send("CRM Backend is running ");
+  res.send("CRM Backend is running");
 });
+
+// 🔥 Dummy KeepAlive Route for UptimeRobot
+app.get("/keepalive", (req, res) => {
+  res.status(200).json({ alive: true, service: "crm-backend" });
+});
+
 // MongoDB
 connectDB();
 
 // Routes
 app.use("/api/leads", leadRoutes);
 
-// Start Cron
+// Cron Job
 startFollowUpCron();
 
+// Server Listen
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Backend running on port ${PORT} `);
+  console.log(`Backend running on port ${PORT}`);
 });
-
