@@ -8,6 +8,7 @@ import { startFollowUpCron } from "./cron/followUpCron.js";
 dotenv.config();
 
 const app = express();
+let cronStarted = false;
 
 // Middleware
 app.use(cors());
@@ -18,21 +19,23 @@ app.get("/", (req, res) => {
   res.send("CRM Backend is running ");
 });
 
-// KeepAlive route for uptime monitoring
+// KeepAlive route (UptimeRobot hits this)
 app.get("/keepalive", (req, res) => {
+  console.log("KeepAlive ping received");
   res.status(200).json({ alive: true, service: "crm-backend" });
 });
 
-// Connect DB + start Cron after successful connection
+// Initialize DB + Cron
 const initialize = async () => {
   await connectDB();
 
-  // Start cron AFTER DB connection succeeds
-  setTimeout(() => {
-    startFollowUpCron();
-  }, 2000);
-
-  console.log(" Cron will start after DB initialization...");
+  if (!cronStarted) {
+    setTimeout(() => {
+      startFollowUpCron();
+      cronStarted = true;
+      console.log(" Follow-up cron started");
+    }, 2000);
+  }
 };
 
 initialize();
@@ -42,11 +45,14 @@ app.use("/api/leads", leadRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error("SERVER ERROR:", err);
-  res.status(500).json({ message: "Internal Server Error", error: err.message });
+  console.error(" SERVER ERROR:", err);
+  res.status(500).json({
+    message: "Internal Server Error",
+    error: err.message,
+  });
 });
 
-// Server Listen
+// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
