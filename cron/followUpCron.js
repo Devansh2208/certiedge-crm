@@ -17,42 +17,70 @@ export const startFollowUpCron = () => {
       let recipients = [];
       let message = "";
 
-      // 1️ Trainer not yet found
+      // Case 1: Trainer not yet found
       if (!lead.trainerFound) {
         recipients = [process.env.LOKESH_CONTACT];
-        message = `Reminder: Please find a trainer for the upcoming course and update the status when done.`;
+        message = `🔔 Reminder: Please find a trainer for the course "${lead.course}" and update the status.`;
 
-      // 2️ Trainer found but quote NOT sent
+
+      // Case 2: Trainer found but quote not sent
       } else if (lead.trainerFound && !lead.quoteSent) {
         recipients = [
           process.env.LOKESH_CONTACT,
           process.env.ANKUSH_CONTACT,
+          process.env.ABIR_CONTACT,
         ];
-        message = `Please share a quote for the upcoming course and update the status when done.`;
+        message = `📄 Reminder: Trainer confirmed. Please send the quote for "${lead.course}".`;
 
-      // 3️ Trainer found AND quote sent → Follow-up with the client
+
+      // Case 3: Trainer found + Quote sent → Follow-up with client
       } else if (lead.trainerFound && lead.quoteSent) {
         recipients = [
           process.env.LOKESH_CONTACT,
           process.env.ANKUSH_CONTACT,
+          process.env.ABIR_CONTACT,
         ];
-        message = `Please follow up with the client ${lead.contactPerson} for the upcoming course ${lead.course} and update the status once done.`;
+
+        const dateFormatted = lead.tentativeDate
+          ? new Date(lead.tentativeDate).toLocaleDateString()
+          : "TBD";
+
+        message = `📞 Follow-up Reminder:
+Client: ${lead.contactPerson}
+Course: ${lead.course}
+Tentative Date: ${dateFormatted}
+
+Please follow up with the client and update the CRM.`;
+
 
       } else {
-        // Otherwise disable notifications
+        // If none match, stop notifications
         lead.notificationsEnabled = false;
         await lead.save();
         continue;
       }
 
-      // Send notification
+      // Send email
+      console.log(`Sending notification for lead ${lead._id} to:`, recipients);      
       sendNotification({ recipients, message });
 
-      // Update last notification time
+      // Update timestamp
       lead.lastNotificationAt = now;
       await lead.save();
     }
   });
 
-  console.log("Follow-Up Cron Activated ");
+  console.log(" Follow-Up Cron Activated");
+
+  // Run test email AFTER 3 seconds (Render-safe)
+  setTimeout(() => {
+    sendNotification({
+      recipients: [
+        process.env.LOKESH_CONTACT,
+        process.env.ANKUSH_CONTACT,
+        process.env.ABIR_CONTACT,
+      ],
+      message: " Test Email: CRM notifications are working successfully!",
+    });
+  }, 3000);
 };

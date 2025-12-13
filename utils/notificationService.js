@@ -2,29 +2,29 @@ import nodemailer from "nodemailer";
 
 export const sendNotification = async ({ recipients, message }) => {
   try {
-    // Email transporter using Gmail SMTP
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER, // your Gmail
-        pass: process.env.EMAIL_PASS, // your app password
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
       },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
-    // Email content
     const mailOptions = {
       from: `"CRM Alerts" <${process.env.EMAIL_USER}>`,
-      to: recipients.join(","), // send to multiple recipients
+      to: recipients.join(","),
       subject: "CRM Auto Notification",
-      text: message,
+      text: message
     };
 
-    // Send email
     await transporter.sendMail(mailOptions);
 
-    console.log(" Email sent to:", recipients);
+    console.log("📧 Gmail Email sent to:", recipients);
 
   } catch (error) {
-    console.error(" Email sending failed:", error);
+    console.error("❌ Gmail email sending failed:", error);
   }
 };
