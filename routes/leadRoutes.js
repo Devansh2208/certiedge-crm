@@ -14,6 +14,23 @@ import { sendNotification } from "../utils/notificationService.js";
 
 const router = express.Router();
 
+import { runFollowUpCheck } from "../cron/followUpCron.js";
+
+// 🧪 MANUAL TRIGGER FOR TESTING
+router.post("/test/run-followup", async (req, res) => {
+  try {
+    await runFollowUpCheck(true);
+    res.json({
+      success: true,
+      message: "Follow-up notification test executed successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
+});
 
 // TEST EMAIL ROUTE 
 

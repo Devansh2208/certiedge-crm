@@ -1,6 +1,9 @@
 import { Lead } from "../models/Lead.js";
+import { notifyOnChange } from "../utils/changeNotifier.js";
 
-// CREATE lead
+/* ============================
+   CREATE LEAD
+   ============================ */
 export const createLead = async (req, res) => {
   try {
     const lead = await Lead.create(req.body);
@@ -10,7 +13,9 @@ export const createLead = async (req, res) => {
   }
 };
 
-// GET all leads
+/* ============================
+   GET ALL LEADS
+   ============================ */
 export const getLeads = async (req, res) => {
   try {
     const leads = await Lead.find().sort({ createdAt: -1 });
@@ -20,18 +25,24 @@ export const getLeads = async (req, res) => {
   }
 };
 
-// Get single lead
+/* ============================
+   GET SINGLE LEAD
+   ============================ */
 export const getLeadById = async (req, res) => {
   try {
     const lead = await Lead.findById(req.params.id);
-    if (!lead) return res.status(404).json({ message: "Lead not found" });
+    if (!lead) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
     res.json(lead);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// Update trainer assignment
+/* ============================
+   UPDATE TRAINER
+   ============================ */
 export const updateTrainer = async (req, res) => {
   try {
     const lead = await Lead.findByIdAndUpdate(
@@ -42,13 +53,21 @@ export const updateTrainer = async (req, res) => {
       },
       { new: true }
     );
+
+    await notifyOnChange({
+      lead,
+      message: `👨‍🏫 Trainer updated for course "${lead.course}". Trainer: ${lead.trainerName}`,
+    });
+
     res.json(lead);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// Update quote info
+/* ============================
+   UPDATE QUOTE
+   ============================ */
 export const updateQuote = async (req, res) => {
   try {
     const lead = await Lead.findByIdAndUpdate(
@@ -56,42 +75,57 @@ export const updateQuote = async (req, res) => {
       {
         quoteAmount: req.body.quoteAmount,
         quoteNotes: req.body.quoteNotes,
-        quoteSent: true
+        quoteSent: true,
       },
       { new: true }
     );
+
+    await notifyOnChange({
+      lead,
+      message: `💰 Quote updated for "${lead.course}". Amount: ₹${lead.quoteAmount}`,
+    });
+
     res.json(lead);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// Add a new remark
+/* ============================
+   ADD REMARK
+   ============================ */
 export const addRemark = async (req, res) => {
   try {
     const { text, author } = req.body;
 
-    const updatedLead = await Lead.findByIdAndUpdate(
+    const lead = await Lead.findByIdAndUpdate(
       req.params.id,
       {
         $push: {
           remarks: {
             text,
             author,
-            timestamp: new Date()
-          }
-        }
+            timestamp: new Date(),
+          },
+        },
       },
       { new: true }
     );
 
-    res.json(updatedLead);
+    await notifyOnChange({
+      lead,
+      message: `📝 New remark added by ${author} for "${lead.course}": "${text}"`,
+    });
+
+    res.json(lead);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// Update tentative date
+/* ============================
+   UPDATE TENTATIVE DATE
+   ============================ */
 export const updateTentativeDate = async (req, res) => {
   try {
     const lead = await Lead.findByIdAndUpdate(
@@ -99,13 +133,23 @@ export const updateTentativeDate = async (req, res) => {
       { tentativeDate: req.body.tentativeDate },
       { new: true }
     );
+
+    await notifyOnChange({
+      lead,
+      message: `📅 Tentative date updated for "${lead.course}": ${new Date(
+        lead.tentativeDate
+      ).toDateString()}`,
+    });
+
     res.json(lead);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// Update status
+/* ============================
+   UPDATE STATUS
+   ============================ */
 export const updateStatus = async (req, res) => {
   try {
     const lead = await Lead.findByIdAndUpdate(
@@ -116,6 +160,12 @@ export const updateStatus = async (req, res) => {
       },
       { new: true }
     );
+
+    await notifyOnChange({
+      lead,
+      message: `📌 Status updated to "${lead.status}" for course "${lead.course}".`,
+    });
+
     res.json(lead);
   } catch (err) {
     res.status(500).json({ message: err.message });
