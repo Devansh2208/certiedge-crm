@@ -1,32 +1,38 @@
-import nodemailer from "nodemailer";
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+
+const ses = new SESClient({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
 
 export const sendNotification = async ({ recipients, message }) => {
   try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false, // must be false for 587
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      connectionTimeout: 10000, // 10 seconds
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
-      tls: {
-        rejectUnauthorized: false,
-      },
-    });
+    if (!recipients || recipients.length === 0) return;
 
-    await transporter.sendMail({
-      from: `"CRM Alerts" <${process.env.EMAIL_USER}>`,
-      to: recipients.join(","),
-      subject: "CRM Notification",
-      text: message,
-    });
+    const params = {
+      Source: process.env.EMAIL_USER, // must be SES-verified
+      Destination: {
+        ToAddresses: recipients,
+      },
+      Message: {
+        Subject: {
+          Data: "CRM Notification",
+        },
+        Body: {
+          Text: {
+            Data: message,
+          },
+        },
+      },
+    };
 
-    console.log("📧 Gmail Email sent to:", recipients);
+    await ses.send(new SendEmailCommand(params));
+
+    console.log("📧 SES email sent to:", recipients);
   } catch (error) {
-    console.error("❌ Gmail email sending failed:", error);
+    console.error("❌ SES email failed:", error.message);
   }
 };
